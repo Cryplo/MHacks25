@@ -1,6 +1,6 @@
 "use strict";
 const require$$3$1 = require("electron");
-const path$1 = require("node:path");
+const path = require("node:path");
 const require$$0$1 = require("path");
 const require$$1$1 = require("child_process");
 const require$$0 = require("tty");
@@ -12,7 +12,7 @@ function getDefaultExportFromCjs(x) {
 }
 var src = { exports: {} };
 var browser = { exports: {} };
-var debug$1 = { exports: {} };
+var debug = { exports: {} };
 var ms;
 var hasRequiredMs;
 function requireMs() {
@@ -118,7 +118,7 @@ function requireMs() {
 }
 var hasRequiredDebug;
 function requireDebug() {
-  if (hasRequiredDebug) return debug$1.exports;
+  if (hasRequiredDebug) return debug.exports;
   hasRequiredDebug = 1;
   (function(module, exports) {
     exports = module.exports = createDebug.debug = createDebug["default"] = createDebug;
@@ -220,8 +220,8 @@ function requireDebug() {
       if (val instanceof Error) return val.stack || val.message;
       return val;
     }
-  })(debug$1, debug$1.exports);
-  return debug$1.exports;
+  })(debug, debug.exports);
+  return debug.exports;
 }
 var hasRequiredBrowser;
 function requireBrowser() {
@@ -434,45 +434,58 @@ function requireNode() {
   })(node, node.exports);
   return node.exports;
 }
-if (typeof process !== "undefined" && process.type === "renderer") {
-  src.exports = requireBrowser();
-} else {
-  src.exports = requireNode();
-}
-var srcExports = src.exports;
-var path = require$$0$1;
-var spawn = require$$1$1.spawn;
-var debug = srcExports("electron-squirrel-startup");
-var app = require$$3$1.app;
-var run = function(args, done) {
-  var updateExe = path.resolve(path.dirname(process.execPath), "..", "Update.exe");
-  debug("Spawning `%s` with args `%s`", updateExe, args);
-  spawn(updateExe, args, {
-    detached: true
-  }).on("close", done);
-};
-var check = function() {
-  if (process.platform === "win32") {
-    var cmd = process.argv[1];
-    debug("processing squirrel command `%s`", cmd);
-    var target = path.basename(process.execPath);
-    if (cmd === "--squirrel-install" || cmd === "--squirrel-updated") {
-      run(["--createShortcut=" + target], app.quit);
-      return true;
-    }
-    if (cmd === "--squirrel-uninstall") {
-      run(["--removeShortcut=" + target], app.quit);
-      return true;
-    }
-    if (cmd === "--squirrel-obsolete") {
-      app.quit();
-      return true;
-    }
+var hasRequiredSrc;
+function requireSrc() {
+  if (hasRequiredSrc) return src.exports;
+  hasRequiredSrc = 1;
+  if (typeof process !== "undefined" && process.type === "renderer") {
+    src.exports = requireBrowser();
+  } else {
+    src.exports = requireNode();
   }
-  return false;
-};
-var electronSquirrelStartup = check();
-const started = /* @__PURE__ */ getDefaultExportFromCjs(electronSquirrelStartup);
+  return src.exports;
+}
+var electronSquirrelStartup;
+var hasRequiredElectronSquirrelStartup;
+function requireElectronSquirrelStartup() {
+  if (hasRequiredElectronSquirrelStartup) return electronSquirrelStartup;
+  hasRequiredElectronSquirrelStartup = 1;
+  var path2 = require$$0$1;
+  var spawn = require$$1$1.spawn;
+  var debug2 = requireSrc()("electron-squirrel-startup");
+  var app = require$$3$1.app;
+  var run = function(args, done) {
+    var updateExe = path2.resolve(path2.dirname(process.execPath), "..", "Update.exe");
+    debug2("Spawning `%s` with args `%s`", updateExe, args);
+    spawn(updateExe, args, {
+      detached: true
+    }).on("close", done);
+  };
+  var check = function() {
+    if (process.platform === "win32") {
+      var cmd = process.argv[1];
+      debug2("processing squirrel command `%s`", cmd);
+      var target = path2.basename(process.execPath);
+      if (cmd === "--squirrel-install" || cmd === "--squirrel-updated") {
+        run(["--createShortcut=" + target], app.quit);
+        return true;
+      }
+      if (cmd === "--squirrel-uninstall") {
+        run(["--removeShortcut=" + target], app.quit);
+        return true;
+      }
+      if (cmd === "--squirrel-obsolete") {
+        app.quit();
+        return true;
+      }
+    }
+    return false;
+  };
+  electronSquirrelStartup = check();
+  return electronSquirrelStartup;
+}
+var electronSquirrelStartupExports = requireElectronSquirrelStartup();
+const started = /* @__PURE__ */ getDefaultExportFromCjs(electronSquirrelStartupExports);
 if (started) {
   require$$3$1.app.quit();
 }
@@ -481,7 +494,7 @@ const createWindow = () => {
     width: 800,
     height: 600,
     webPreferences: {
-      preload: path$1.join(__dirname, "preload.js")
+      preload: path.join(__dirname, "preload.js")
     }
   });
   {

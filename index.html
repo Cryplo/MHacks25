@@ -8,6 +8,11 @@
   <body>
     <h1>💖 Hello World!</h1>
     <p>Welcome to your Electron application.</p>
+    <input type="text" id="input" name="input" placeholder="Enter language to run shell command">
     <script type="module" src="/src/renderer.ts"></script>
+    <script type="module">
+      import { LanguageToCommandPrint } from "/src/translator.ts";
+      document.getElementById("input").addEventListener("keydown",  async (e) => {if(e.key == "Enter"){await LanguageToCommandPrint(e.target.value)}});
+    </script>
   </body>
 </html>
