@@ -1,4 +1,4 @@
-import { app, shell, BrowserWindow, ipcMain } from 'electron'
+import { app, shell, BrowserWindow, Menu, ipcMain } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
@@ -13,9 +13,15 @@ function createWindow(): void {
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
+      devTools: !app.isPackaged,
       sandbox: false
     }
   })
+
+
+  const customMenu = Menu.buildFromTemplate([]); // Create an empty menu or populate with desired items
+
+  Menu.setApplicationMenu(customMenu);
 
   mainWindow.on('ready-to-show', () => {
     mainWindow.show()
