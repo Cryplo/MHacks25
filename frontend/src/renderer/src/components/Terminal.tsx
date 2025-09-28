@@ -1,5 +1,7 @@
 import React, { useState, useRef } from 'react'
 import { CommandToDescription, LanguageToCommand } from "../../../backend/translator"
+import { useWebSocket } from "../../backend/websockets";
+import { useConnectionContext } from "../providers/ConnectionProvider";
 import { useWebSocket } from '../../../backend/websockets'
 import './Terminal.css'
 
@@ -7,6 +9,8 @@ export default function Terminal(): React.JSX.Element {
   const [currentCommand, setCurrentCommand] = useState('')
 
   const [totalHistory, setTotalHistory] = useState([])
+  const { targetIp } = useConnectionContext();
+  const { sendCommandAndWait } = useWebSocket(targetIp);
 
   const [commandHistory, setCommandHistory] = useState([])
 
