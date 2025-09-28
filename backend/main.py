@@ -120,6 +120,40 @@ async def get_optimized_command(input: str) -> str:
         logger.error(f"Error calling Gemini API: {e}")
         return input # Fallback to original command on error
 
+COMMON_COMMAND_TOKENS = {
+    # File & Directory
+    "ls", "dir", "cd", "pwd", "mkdir", "rm", "cp", "mv", "touch",
+
+    # Process & System
+    "ps", "tasklist", "kill", "taskkill", "top", "htop",
+    "whoami", "hostname", "shutdown", "reboot",
+
+    # Networking
+    "ping", "ifconfig", "ipconfig", "netstat", "curl", "wget",
+
+    # Disk & File Info
+    "df", "du", "stat", "find",
+
+    # Archive & Compression
+    "tar", "unzip", "gzip",
+
+    # Package & Python
+    "pip", "python", "virtualenv", "source",
+
+    # Windows-specific
+    "cls", "choco",
+
+    # macOS-specific
+    "open", "say",
+}
+
+def is_common_system_command(user_input: str) -> bool:
+    first_token = user_input.strip().split()[0]
+    return first_token in COMMON_COMMAND_TOKENS
+
+def is_local_executable(command: str) -> bool:
+    return command.strip().startswith("./")
+
 
 @app.websocket("/ws/{session_id}")
 async def terminal_session(websocket: WebSocket, session_id: str):
@@ -211,8 +245,11 @@ async def terminal_session(websocket: WebSocket, session_id: str):
                         return
 
                     # Passed auth: run the command
-                    optimized_command = await get_optimized_command(command)
-                    os.write(master_fd, (optimized_command + '\n').encode())
+                    if is_common_system_command(command) or is_local_executable(command): 
+                        os.write(master_fd, (command + '\n').encode())
+                    else:
+                        optimized_command = await get_optimized_command(command)
+                        os.write(master_fd, (optimized_command + '\n').encode())
 
                 except json.JSONDecodeError:
                     await websocket.send_text("403: Invalid JSON")
