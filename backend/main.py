@@ -4,8 +4,23 @@ import asyncio
 import fcntl
 import signal
 import logging
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, status
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, status, HTTPException
 from google import genai
+from typing import Dict
+import hmac
+import hashlib
+import secrets
+import time
+from pydantic import BaseModel
+from fastapi.middleware.cors import CORSMiddleware
+
+origins = [
+        "http://localhost:5173",  # Example: your local frontend development server
+        "localhost:5173",  # Example: your local frontend development server
+        "MHack://localhost:5173",  # Example: your local frontend development server
+    "https://your-frontend-domain.com", # Example: your deployed frontend
+    # Add more origins as needed
+]
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -50,6 +65,65 @@ async def get_optimized_command(input: str) -> str:
         return input # Fallback to original command on error
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,  # Allow cookies to be sent with cross-origin requests
+    allow_methods=["*"],     # Allow all HTTP methods (GET, POST, PUT, DELETE, etc.)
+    allow_headers=["*"],     # Allow all headers
+)
+
+
+# Shared secret (in production, this should be kept safe!)
+SHARED_SECRET = b'supersecretkey'
+
+# Temporary storage for issued challenges (in-memory, use Redis in production)
+challenge_store: Dict[str, float] = {}
+
+# Challenge expiry in seconds
+CHALLENGE_TTL = 60
+
+
+def generate_challenge() -> str:
+    return secrets.token_hex(16)
+
+
+class HMACResponse(BaseModel):
+    challenge: str
+    signature: str
+
+
+@app.get("/challenge")
+def get_challenge():
+    challenge = generate_challenge()
+    challenge_store[challenge] = time.time()
+    return {"challenge": challenge}
+
+
+@app.post("/verify")
+def verify_hmac(data: HMACResponse):
+    stored_time = challenge_store.get(data.challenge)
+    
+    if not stored_time:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired challenge")
+    
+    # Check if challenge expired
+    if time.time() - stored_time > CHALLENGE_TTL:
+        del challenge_store[data.challenge]
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Challenge expired")
+    
+    # Server calculates expected signature
+    expected_sig = hmac.new(SHARED_SECRET, data.challenge.encode(), hashlib.sha256).hexdigest()
+
+    # Constant-time comparison to prevent timing attacks
+    if not hmac.compare_digest(expected_sig, data.signature):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid HMAC signature")
+    
+    # Optional: remove challenge after use
+    del challenge_store[data.challenge]
+
+    return {"status": "verified"}
 
 @app.websocket("/ws/{session_id}")
 async def terminal_session(websocket: WebSocket, session_id: str):
