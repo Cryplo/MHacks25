@@ -18,7 +18,7 @@ export default function Terminal(): React.JSX.Element {
 
   const processorRef = useRef(null)
 
-  const { sendCommand } = useWebSocket();
+  const { sendCommandAndWait } = useWebSocket();
 
   const handleKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => Promise<void> = async (e) => {
     if (e.key === 'Enter') {
@@ -28,8 +28,8 @@ export default function Terminal(): React.JSX.Element {
         // const shellCommand = await LanguageToCommand(currentCommand)
 
         // console.log(await CommandToDescription(shellCommand))
-        sendCommand(currentCommand)
-        setCommandHistory(prev => [...prev, currentCommand])
+        const response = await sendCommandAndWait(currentCommand)
+        setCommandHistory(prev => [...prev, currentCommand, response])
         setCurrentCommand('')
         setHistoryIndex(-1) // Reset history index when new command is entered
 

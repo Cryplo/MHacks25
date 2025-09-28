@@ -8,10 +8,15 @@ export function useWebSocket(){
     socketRef.current = ws;
     return () => ws.close();
   })
-  const sendCommand = (command: string) => {
-    if(socketRef.current?.readyState === WebSocket.OPEN){
+  const sendCommandAndWait = (command: string): Promise<string> => {
+    return new Promise((resolve) => {
+      const handler = (event: MessageEvent) => {
+        socketRef.current.removeEventListener("message", handler);
+        resolve(event.data);
+      }
+      socketRef.current.addEventListener("message", handler);
       socketRef.current.send(command);
-    }  
+    });
   }
-  return { sendCommand };
+  return { sendCommandAndWait };
 }
