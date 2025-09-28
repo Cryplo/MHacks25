@@ -2,6 +2,8 @@ import { useState, useEffect, JSX } from 'react'
 import Terminal from './Terminal';
 import './Tabs.css';
 import settingsIcon from '../../../../resources/settings.png'
+import Settings from './Settings';
+import { useSettings } from '../contexts/SettingsContext';
 
 
 interface Tabs {
@@ -15,10 +17,21 @@ interface TabsProps {
 }
 
 const Tabs: React.FC<TabsProps> = ({ onActiveTabChange }) => {
+  const { theme } = useSettings()
   const [tabs, setTabs] = useState<Tabs[]>([]);
   const [activeTabId, setActiveTabId] = useState('');
   const [isAddTabHidden, setIsAddTabHidden] = useState(false);
   const [isSettingsHidden, setIsSettingsHidden] = useState(true);
+
+  // Apply theme-based styling for tabs
+  const getTabsThemeStyles = (): { backgroundColor: string; color: string; borderColor: string } => {
+    const isDark = theme === 'dark' || (theme === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches)
+    return {
+      backgroundColor: isDark ? '#1e1e1e' : '#ffffff',
+      color: isDark ? '#ffffff' : '#000000',
+      borderColor: isDark ? '#404040' : '#e0e0e0'
+    }
+  }
 
   useEffect(() => {
     if (tabs.length === 0) {
@@ -73,23 +86,33 @@ const Tabs: React.FC<TabsProps> = ({ onActiveTabChange }) => {
     const newTab: Tabs = {
       id: newTabId,
       title: `user@user ${newTabId}`,
-      component: <Terminal key={newTabId} tabId={newTabId} />
+      component: <Terminal key={newTabId} />
     };
     setTabs([...tabs, newTab]);
     setActiveTabId(newTabId);
     onActiveTabChange?.(newTabId);
   };
 
+  const tabsThemeStyles = getTabsThemeStyles()
+
   return (
     <div>
       <div
-        className="tabs-container">
+        className="tabs-container"
+        style={{
+          backgroundColor: tabsThemeStyles.backgroundColor,
+          borderBottomColor: tabsThemeStyles.borderColor
+        }}>
         <div className="tabs-list">
           {tabs.map((tab) => (
             <div
               key={tab.id}
               className={`tab ${tab.id === activeTabId ? 'active' : ''}`}
               onClick={() => handleTabClick(tab.id)}
+              style={{
+                backgroundColor: tab.id === activeTabId ? tabsThemeStyles.borderColor : 'transparent',
+                color: tabsThemeStyles.color
+              }}
             >
               <span className="tab-title">{tab.title}</span>
               <button
@@ -115,6 +138,9 @@ const Tabs: React.FC<TabsProps> = ({ onActiveTabChange }) => {
       <button
         className="settings-button"
         onClick={handleSettingsClick}
+        style={{
+          backgroundColor: isSettingsHidden ? 'transparent' : tabsThemeStyles.borderColor
+        }}
       >
         <img
           src={settingsIcon}
@@ -137,7 +163,7 @@ const Tabs: React.FC<TabsProps> = ({ onActiveTabChange }) => {
       <div className="settings-page"
         style={{ display: isSettingsHidden ? 'none' : 'block' }}
       >
-
+        <Settings />
       </div>
     </div>
   );
