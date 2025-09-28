@@ -46,6 +46,7 @@
   height: auto;
   pointer-events: none; /* This is correct - prevents the image from intercepting clicks */
   display: block;
+  filter: invert(0)
 }
 
 .tabs-list::-webkit-scrollbar {
@@ -117,4 +118,10 @@
 
 .new-tab-button:hover {
   background-color: #e0e0e0;
+}
+
+.settings-page {
+  height: calc(100vh - 46px); /* Match terminal height */
+  width: 100%;
+  position: relative;
 }

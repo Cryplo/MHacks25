@@ -146,6 +146,10 @@ const Tabs: React.FC<TabsProps> = ({ onActiveTabChange }) => {
           src={settingsIcon}
           alt="Settings"
           className="settings-icon"
+          style={{
+            filter: theme === 'dark' || (theme === 'auto' && window.matchMedia('(prefers-color-scheme: dark)').matches) 
+              ? 'invert(1)' : 'invert(0)'
+          }}
         />
       </button>
       <div className="tab-content"

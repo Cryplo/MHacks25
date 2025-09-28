@@ -122,7 +122,8 @@ const Settings: React.FC = () => {
           >
             <div className="preview-line">user@user:~$ echo "Hello World"</div>
             <div className="preview-line">Hello World</div>
-            <div className="preview-line">user@user:~$ <span className="cursor">█</span></div>
+            <div className="preview-line">user@user:~$ </div>
+            {/* <span className="cursor">█</span> */}
           </div>
         </div>
       </div>

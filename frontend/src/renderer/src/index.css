@@ -143,15 +143,30 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   ::selection {
     @apply bg-selection text-selection-foreground;
   }
+
   html {
     @apply scroll-smooth;
+    /* overflow: hidden; */
   }
+
   body {
     font-synthesis-weight: none;
     text-rendering: optimizeLegibility;
+    /* overflow: hidden; */
+  }
+
+  html::-webkit-scrollbar {
+    display: none;
+    /* Hide scrollbar for Chrome, Safari and Opera */
+  }
+
+  body::-webkit-scrollbar {
+    display: none;
+    /* Hide scrollbar for Chrome, Safari and Opera */
   }
 
   @supports (font: -apple-system-body) and (-webkit-appearance: none) {
@@ -221,15 +236,15 @@
       @apply !mt-0;
     }
 
-    &:first-child > h3:first-child {
+    &:first-child>h3:first-child {
       @apply !mt-0;
     }
 
-    > h3 {
+    >h3 {
       @apply !mt-16;
     }
 
-    > h3 + p {
+    >h3+p {
       @apply !mt-2;
     }
   }
