@@ -1,7 +1,7 @@
 // import Versions from './components/Versions'
 // import electronLogo from './assets/electron.svg'
-import { Terminal } from './components/Terminal.tsx'
-import Tabs from './components/tab'
+import  Terminal  from './Terminal'
+import Tabs from './components/Tabs'
 
 function App(): React.JSX.Element {
 
