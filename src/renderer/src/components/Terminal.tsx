@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { LanguageToCommand } from "./../../../backend/translator.tsx"
+import { CommandToDescription, LanguageToCommand } from "./../../../backend/translator.tsx"
 
 export function Terminal(): React.JSX.Element {
   const [currentCommand, setCurrentCommand] = useState('')
@@ -15,6 +15,7 @@ export function Terminal(): React.JSX.Element {
       if (currentCommand.trim()) {
         setIsProcessing(true)
         const shellCommand = await LanguageToCommand(currentCommand)
+        console.log(await CommandToDescription(shellCommand))
         console.log('Shell command:', shellCommand)
         setIsProcessing(false)
       }
