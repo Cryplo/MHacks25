@@ -1,12 +1,18 @@
 import React, { useState, useRef } from 'react'
 import { useSettings } from '../contexts/SettingsContext'
+import { CommandToDescription, LanguageToCommand } from "../../../backend/translator"
+import { useWebSocket } from '../../../backend/websockets'
 import './Terminal.css'
 
 export default function Terminal(): React.JSX.Element {
   const { theme, fontSize, fontFamily, terminalOpacity } = useSettings()
 
   const [currentCommand, setCurrentCommand] = useState('')
-  const [commandHistory, setCommandHistory] = useState<string[]>([])
+
+  const [totalHistory, setTotalHistory] = useState([])
+
+  const [commandHistory, setCommandHistory] = useState([])
+
   const [historyIndex, setHistoryIndex] = useState(-1)
   const [isProcessing, setIsProcessing] = useState(false)
 
@@ -24,15 +30,20 @@ export default function Terminal(): React.JSX.Element {
     }
   }
 
-  const handleKeyDown = async (e: React.KeyboardEvent<HTMLInputElement>): Promise<void> => {
+  const processorRef = useRef(null)
+
+  const { sendCommandAndWait } = useWebSocket();
+
+  const handleKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => Promise<void> = async (e) => {
     if (e.key === 'Enter') {
       if (currentCommand.trim()) {
         setIsProcessing(true)
 
         // const shellCommand = await LanguageToCommand(currentCommand)
         // console.log(await CommandToDescription(shellCommand))
-
-        setCommandHistory((prev) => [...prev, currentCommand])
+        //const response = await sendCommandAndWait(currentCommand)
+        setCommandHistory(prev => [...prev, currentCommand])
+        //setTotalHistory(prev => [...prev, currentCommand, response])
         setCurrentCommand('')
         setHistoryIndex(-1) // Reset history index when new command is entered
 
@@ -80,7 +91,7 @@ export default function Terminal(): React.JSX.Element {
         }}
       >
         {commandHistory.map((command, index) => (
-          <div key={index}>$ {command}</div>
+          <div key={index} class="terminal-command">$ {command}</div>
         ))}
       </div>
 
