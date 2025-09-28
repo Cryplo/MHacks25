@@ -11,6 +11,8 @@ from google import genai
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+GEMINI_API_TIMEOUT = 15
+
 client = genai.Client(api_key="AIzaSyC9hDw9JrhmGgBVBHZOKzwAdk2VLE6H8J4")
 
 async def get_optimized_command(input: str) -> str:
@@ -30,12 +32,13 @@ async def get_optimized_command(input: str) -> str:
     try:
         # Run the synchronous SDK call in a thread pool to avoid blocking asyncio
         loop = asyncio.get_running_loop()
-        response = await loop.run_in_executor(
+        api_call = loop.run_in_executor(
             None,
             lambda: client.models.generate_content(
                 model="gemini-2.5-flash", contents=prompt
             )
         )
+        response = await asyncio.wait_for(api_call, timeout=GEMINI_API_TIMEOUT)
         optimized_command = response.text.strip()
 
         # A simple check to ensure we got something reasonable back
@@ -76,6 +79,10 @@ async def terminal_session(websocket: WebSocket, session_id: str):
     fcntl.fcntl(master_fd, fcntl.F_SETFL, fl | os.O_NONBLOCK)
 
     os.write(master_fd,
+        b"cd ~\n"
+    )
+
+    os.write(master_fd,
         b"PROMPT_COMMAND='printf \"\\n__CMD_DONE__:%s\\n\" $?'\n"
     )
 
@@ -101,6 +108,8 @@ async def terminal_session(websocket: WebSocket, session_id: str):
                     # extract status
                     parts = buffer.split("__CMD_DONE__:")
                     before, rest = parts[0], parts[1]
+                    cmd = before.split("\r\n")[0]
+                    output = "".join(before.split("\r\n")[1:])
                     status_line, remainder = rest.split("\n", 1)
                     exit_code = status_line.strip()
                     cwd = remainder.split(" ")[0] if " " in remainder else ""
@@ -108,7 +117,7 @@ async def terminal_session(websocket: WebSocket, session_id: str):
                     logger.info(f"Command finished with status {exit_code}")
                     buffer = ""
 
-                    await websocket.send_json({"output": before.strip(), "exit_code": exit_code, "cwd": cwd})
+                    await websocket.send_json({"cmd": cmd, "output": output, "exit_code": exit_code, "cwd": cwd})
             except BlockingIOError:
                 # No data to read, continue waiting
                 continue
