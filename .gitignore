@@ -8,5 +8,8 @@ frontend/out
 frontend/.DS_Store
 frontend/.eslintcache
 frontend/*.log*
-
 frontend/.env
+
+backend/__pycache__/
+backend/.DS_Store
+backend/.python-version
