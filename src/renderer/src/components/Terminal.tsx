@@ -6,6 +6,8 @@ import './Terminal.css'
 export default function Terminal(): React.JSX.Element {
   const [currentCommand, setCurrentCommand] = useState('')
 
+  const [totalHistory, setTotalHistory] = useState([])
+
   const [commandHistory, setCommandHistory] = useState([])
 
   const [historyIndex, setHistoryIndex] = useState(-1)
@@ -29,7 +31,8 @@ export default function Terminal(): React.JSX.Element {
 
         // console.log(await CommandToDescription(shellCommand))
         const response = await sendCommandAndWait(currentCommand)
-        setCommandHistory(prev => [...prev, currentCommand, response])
+        setCommandHistory(prev => [...prev, currentCommand])
+        setTotalHistory(prev => [...prev, currentCommand, response])
         setCurrentCommand('')
         setHistoryIndex(-1) // Reset history index when new command is entered
 
