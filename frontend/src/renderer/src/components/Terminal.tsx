@@ -4,12 +4,13 @@ import { useWebSocket } from "../../../backend/websockets";
 import { useConnectionContext } from "../providers/ConnectionProvider";
 import './Terminal.css'
 
-export default function Terminal(): React.JSX.Element {
+export default function Terminal({ tabId }): React.JSX.Element {
   const [currentCommand, setCurrentCommand] = useState('')
+  const [currentWorkingDirectory, setCurrentWorkingDirectory] = useState('')
 
   const [totalHistory, setTotalHistory] = useState([])
   const { targetIp } = useConnectionContext();
-  const { sendCommandAndWait } = useWebSocket(targetIp);
+  const { sendCommandAndWait } = useWebSocket(targetIp, tabId);
 
   const [commandHistory, setCommandHistory] = useState([])
 
@@ -32,9 +33,12 @@ export default function Terminal(): React.JSX.Element {
         // const shellCommand = await LanguageToCommand(currentCommand)
 
         // console.log(await CommandToDescription(shellCommand))
-        //const response = await sendCommandAndWait(currentCommand)
+        const response = await sendCommandAndWait(currentCommand)
+        const responseObject = JSON.parse(response)
+        if(!responseObject.exit_code) setCurrentWorkingDirectory(responseObject.cwd);
+
         setCommandHistory(prev => [...prev, currentCommand])
-        //setTotalHistory(prev => [...prev, currentCommand, response])
+        setTotalHistory(prev => [...prev, currentCommand, responseObject.exit_code ? "Error" : responseObject.output])
         setCurrentCommand('')
         setHistoryIndex(-1) // Reset history index when new command is entered
 
@@ -75,14 +79,14 @@ export default function Terminal(): React.JSX.Element {
   return (
     <div className="terminal">
       <div className="terminal-output">
-        {commandHistory.map((command, index) => (
+        {totalHistory.map((command, index) => (
           <div key={index} className={`terminal-command${index === historyIndex ? " selected" : ""}`}>$ {command}</div>
         ))}
       </div>
 
       <div className="terminal-input">
         <div className="flex items-center">
-          <span className="text-terminal-prompt mr-2">$</span>
+          <span className="text-terminal-prompt mr-2">{currentWorkingDirectory} $</span>
 
           <input
             type="text"

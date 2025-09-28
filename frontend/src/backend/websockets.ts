@@ -1,12 +1,12 @@
 import { useEffect, useRef } from "react";
 
-export function useWebSocket(ipAddress: string) {
+export function useWebSocket(ipAddress: string, id: number) {
   const socketRef = useRef<WebSocket | null>(null);
 
   useEffect(() => {
     if (!ipAddress) return;
 
-    const ws = new WebSocket(`ws://${ipAddress}:8000/ws`);
+    const ws = new WebSocket(`ws://${ipAddress}:8000/ws/${id}`);
     socketRef.current = ws;
 
     return () => {

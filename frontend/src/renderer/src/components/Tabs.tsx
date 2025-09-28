@@ -130,7 +130,7 @@ const Tabs: React.FC<TabsProps> = ({ onActiveTabChange }) => {
             style={{ display: tab.id === activeTabId ? 'block' : 'none' }}
             className="terminal-wrapper"
           >
-            <Terminal />
+            <Terminal tabId={tab.id}/>
           </div>
         ))}
       </div>
