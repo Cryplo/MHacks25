@@ -18,7 +18,7 @@ export async function LanguageToCommand(description: string): Promise<string> {
     }
     const response = await ai.models.generateContent({
         model: "gemini-2.5-flash",
-        contents: "Translate the following description into a shell command. Output only plain text, do not have any formatting:\n" + description, 
+        contents: "Translate the following description into a shell command" + os + ". Output only plain text, do not have any formatting:\n" + description, 
         config: {
                 thinkingConfig:{
                     thinkingBudget: 0,
