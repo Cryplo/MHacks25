@@ -9,6 +9,7 @@ frontend/.DS_Store
 frontend/.eslintcache
 frontend/*.log*
 frontend/.env
+frontend/enduring*
 
 backend/__pycache__/
 backend/.DS_Store
