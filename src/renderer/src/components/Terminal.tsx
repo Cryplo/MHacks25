@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { CommandToDescription, LanguageToCommand } from "../../../backend/translator"
+import { CreateSocket } from '../../../backend/websockets'
 
 export default function Terminal(): React.JSX.Element {
   const [currentCommand, setCurrentCommand] = useState('')
@@ -15,6 +16,12 @@ export default function Terminal(): React.JSX.Element {
   const outputRef = useRef(null)
 
   const processorRef = useRef(null)
+
+  useEffect(
+    () => {
+      CreateSocket();
+    }
+  )
 
   const handleKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => Promise<void> = async (e) => {
     if (e.key === 'Enter') {
