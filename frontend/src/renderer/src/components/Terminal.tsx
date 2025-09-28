@@ -1,8 +1,7 @@
 import React, { useState, useRef } from 'react'
 import { CommandToDescription, LanguageToCommand } from "../../../backend/translator"
-import { useWebSocket } from "../../backend/websockets";
+import { useWebSocket } from "../../../backend/websockets";
 import { useConnectionContext } from "../providers/ConnectionProvider";
-import { useWebSocket } from '../../../backend/websockets'
 import './Terminal.css'
 
 export default function Terminal(): React.JSX.Element {
@@ -24,7 +23,6 @@ export default function Terminal(): React.JSX.Element {
 
   const processorRef = useRef(null)
 
-  const { sendCommandAndWait } = useWebSocket();
 
   const handleKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => Promise<void> = async (e) => {
     if (e.key === 'Enter') {
