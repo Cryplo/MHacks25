@@ -11,7 +11,7 @@ from google import genai
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-client = genai.Client(api_key="AIzaSyC9hDw9JrhmGgBVBHZOKzwAdk2VLE6H8J4")
+client = genai.Client(api_key="AIzaSyBiTEw0pvNJZrDMzURSOArmY3Cff72ZrmU")
 
 async def get_optimized_command(input: str) -> str:
     """Sends a command to Gemini and returns the optimized version."""
@@ -43,7 +43,7 @@ async def get_optimized_command(input: str) -> str:
         response = await loop.run_in_executor(
             None,
             lambda: client.models.generate_content(
-                model="gemini-2.5-flash", contents=prompt
+                model="gemini-2.5-flash-lite", contents=prompt
             )
         )
         optimized_command = response.text.strip()
@@ -51,6 +51,8 @@ async def get_optimized_command(input: str) -> str:
         # A simple check to ensure we got something reasonable back
         if not optimized_command:
             return input
+        if optimized_command.startswith("`") and optimized_command.endswith("`"):
+            optimized_command = optimized_command[1:-1].strip()
 
         return optimized_command
     except Exception as e:
