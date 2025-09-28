@@ -1,5 +1,4 @@
 import { useEffect, useRef } from "react"
-import { WebSocket } from "ws" 
 
 export function useWebSocket(){
   const socketRef = useRef<WebSocket | null>(null);
@@ -9,13 +8,18 @@ export function useWebSocket(){
     return () => ws.close();
   })
   const sendCommandAndWait = (command: string): Promise<string> => {
-    return new Promise((resolve) => {
-      const handler = (event: MessageEvent) => {
-        socketRef.current.removeEventListener("message", handler);
-        resolve(event.data);
+    return new Promise((resolve, reject) => {
+      if(socketRef.current?.readyState === WebSocket.OPEN){
+        const handler = (event: MessageEvent) => {
+          socketRef.current.removeEventListener("message", handler);
+          resolve(event.data);
+        }
+        socketRef.current.addEventListener("message", handler);
+        socketRef.current.send(command);
       }
-      socketRef.current.addEventListener("message", handler);
-      socketRef.current.send(command);
+      else{
+        reject("Web Socket is not open")
+      }
     });
   }
   return { sendCommandAndWait };
