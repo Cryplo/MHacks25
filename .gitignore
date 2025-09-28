@@ -2,7 +2,7 @@
 .vscode
 
 
-frontend/node_modules/
+./frontend/node_modules/
 fronten/dist/
 frontend/out
 frontend/.DS_Store
