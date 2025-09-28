@@ -91,7 +91,7 @@ export default function Terminal(): React.JSX.Element {
         }}
       >
         {commandHistory.map((command, index) => (
-          <div key={index} class="terminal-command">$ {command}</div>
+          <div key={index} className={`terminal-command${index === historyIndex ? " selected" : ""}`}>$ {command}</div>
         ))}
       </div>
 
