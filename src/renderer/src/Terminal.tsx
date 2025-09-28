@@ -1,4 +1,4 @@
-export function Terminal(): React.JSX.Element {
+export default function Terminal(): React.JSX.Element {
   return (
     <div className="w-full max-w-4xl mx-auto">
       <div className="bg-terminal-bg border border-terminal-border rounded-lg overflow-hidden shadow-2xl">

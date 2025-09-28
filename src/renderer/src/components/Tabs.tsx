@@ -1,17 +1,19 @@
 import { useState, useEffect } from 'react';
-import './tab.css';
+import  Terminal  from '../Terminal';
+import './Tabs.css';
 
-interface Tab {
-  id: string;
-  title: string;
+interface Tabs {
+  id: string
+  terminal: typeof Terminal
+  title: string
 }
 
 interface TabsProps {
-  onActiveTabChange?: (tabId: string) => void;
+  onActiveTabChange?: (tabId: string) => void
 }
 
 const Tabs: React.FC<TabsProps> = ({ onActiveTabChange }) => {
-  const [tabs, setTabs] = useState<Tab[]>([]);
+  const [tabs, setTabs] = useState<Tabs[]>([]);
   const [activeTabId, setActiveTabId] = useState('');
 
   useEffect(() => {
@@ -80,6 +82,9 @@ const Tabs: React.FC<TabsProps> = ({ onActiveTabChange }) => {
         <button className="new-tab-button" onClick={handleNewTab}>
           +
         </button>
+      </div>
+      <div className="tab-content">
+        <Terminal></Terminal>
       </div>
     </div>
   );
