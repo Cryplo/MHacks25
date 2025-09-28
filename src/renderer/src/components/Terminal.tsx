@@ -30,9 +30,9 @@ export default function Terminal(): React.JSX.Element {
         // const shellCommand = await LanguageToCommand(currentCommand)
 
         // console.log(await CommandToDescription(shellCommand))
-        const response = await sendCommandAndWait(currentCommand)
+        //const response = await sendCommandAndWait(currentCommand)
         setCommandHistory(prev => [...prev, currentCommand])
-        setTotalHistory(prev => [...prev, currentCommand, response])
+        //setTotalHistory(prev => [...prev, currentCommand, response])
         setCurrentCommand('')
         setHistoryIndex(-1) // Reset history index when new command is entered
 
@@ -74,7 +74,7 @@ export default function Terminal(): React.JSX.Element {
     <div className="terminal">
       <div className="terminal-output">
         {commandHistory.map((command, index) => (
-          <div key={index}>$ {command}</div>
+          <div key={index} class="terminal-command">$ {command}</div>
         ))}
       </div>
 
