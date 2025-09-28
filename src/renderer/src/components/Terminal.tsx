@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useRef } from 'react'
 import { CommandToDescription, LanguageToCommand } from "../../../backend/translator"
-import { CreateSocket } from '../../../backend/websockets'
+import { useWebSocket } from '../../../backend/websockets'
 import './Terminal.css'
 
 export default function Terminal(): React.JSX.Element {
@@ -18,11 +18,7 @@ export default function Terminal(): React.JSX.Element {
 
   const processorRef = useRef(null)
 
-  useEffect(
-    () => {
-      CreateSocket();
-    }
-  )
+  const { sendCommand } = useWebSocket();
 
   const handleKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => Promise<void> = async (e) => {
     if (e.key === 'Enter') {
@@ -32,7 +28,7 @@ export default function Terminal(): React.JSX.Element {
         // const shellCommand = await LanguageToCommand(currentCommand)
 
         // console.log(await CommandToDescription(shellCommand))
-
+        sendCommand(currentCommand)
         setCommandHistory(prev => [...prev, currentCommand])
         setCurrentCommand('')
         setHistoryIndex(-1) // Reset history index when new command is entered
