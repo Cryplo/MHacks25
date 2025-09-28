@@ -1,3 +1,12 @@
 .idea
 .vscode
+
+
 frontend/node_modules/
+fronten/dist/
+frontend/out
+frontend/.DS_Store
+frontend/.eslintcache
+frontend/*.log*
+
+frontend/.env
