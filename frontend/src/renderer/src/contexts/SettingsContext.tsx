@@ -28,7 +28,7 @@ interface SettingsProviderProps {
 }
 
 export const SettingsProvider: React.FC<SettingsProviderProps> = ({ children }) => {
-  const [theme, setTheme] = useState<Theme>('dark')
+  const [theme, setTheme] = useState<Theme>('light')
   const [fontSize, setFontSize] = useState(14)
   const [fontFamily, setFontFamily] = useState('Consolas, monospace')
   const [terminalOpacity, setTerminalOpacity] = useState(0.9)

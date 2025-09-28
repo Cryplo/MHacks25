@@ -149,14 +149,16 @@ const Tabs: React.FC<TabsProps> = ({ onActiveTabChange }) => {
         />
       </button>
       <div className="tab-content"
-        style={{ display: isSettingsHidden ? 'block' : 'none' }}>
+        style={{ 
+          display: isSettingsHidden ? 'block' : 'none'
+        }}>
         {tabs.map((tab) => (
           <div
             key={tab.id}
             style={{ display: tab.id === activeTabId ? 'block' : 'none' }}
             className="terminal-wrapper"
           >
-            <Terminal />
+            <Terminal tabId={tab.id}/>
           </div>
         ))}
       </div>
