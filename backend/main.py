@@ -4,7 +4,7 @@ import asyncio
 import fcntl
 import signal
 import logging
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, status
 from google import genai
 
 # Configure logging
@@ -154,3 +154,7 @@ async def terminal_session(websocket: WebSocket, session_id: str):
             logger.warning(f"Process {pid} already terminated.")
         os.close(master_fd)
         logger.info(f"Session '{session_id}': Cleanup complete for PID {pid}.")
+
+@app.get("/health", status_code=status.HTTP_200_OK)
+def health_check():
+    return {"status": "ok"}
