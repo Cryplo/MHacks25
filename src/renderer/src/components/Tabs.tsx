@@ -1,5 +1,5 @@
 import { useState, useEffect, JSX } from 'react'
-import  Terminal  from '../Terminal';
+import  Terminal  from './Terminal';
 import './Tabs.css';
 
 interface Tabs {

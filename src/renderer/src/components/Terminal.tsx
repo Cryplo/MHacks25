@@ -30,7 +30,6 @@ export default function Terminal(): React.JSX.Element {
               autoComplete="off"
               spellCheck={false}
             />
-            <span className="terminal-cursor text-terminal-cursor">|</span>
           </div>
         </div>
       </div>
