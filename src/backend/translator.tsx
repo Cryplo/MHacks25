@@ -4,16 +4,28 @@ import { GoogleGenAI } from "@google/genai";
 const ai = new GoogleGenAI({apiKey: import.meta.env.VITE_GEMINI_API_KEY});
 
 export async function LanguageToCommand(description: string): Promise<string> {
-  const response = await ai.models.generateContent({
-    model: "gemini-2.5-flash",
-    contents: "Translate the following description into a shell command. Output only plain text, do not have any formatting:\n" + description, 
-    config: {
-            thinkingConfig:{
-                thinkingBudget: 0,
+    var os = ""
+    switch(process.platform){
+        case "darwin":
+            os = " for MacOS"
+            break;
+        case "linux":
+            os = " for Linux"
+            break;
+        case "win32":
+            os = " for Windows"
+            break;
+    }
+    const response = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: "Translate the following description into a shell command. Output only plain text, do not have any formatting:\n" + description, 
+        config: {
+                thinkingConfig:{
+                    thinkingBudget: 0,
+                }
             }
-        }
-    });
-  return response.text;
+        });
+    return response.text;
 }
 
 export async function CommandToDescription(command: string): Promise<string> {
