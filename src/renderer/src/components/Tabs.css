@@ -17,9 +17,35 @@
   padding: 0;
   margin: 0;
   overflow-x: auto;
-  width: 100%;
+  width: 94vw;
   max-width: 100vw; /* Prevent extending beyond viewport */
   box-sizing: border-box;
+}
+
+.settings-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  position: absolute;
+  z-index: 10;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  top: 3px; /* Align to top */
+  right: 6px; /* Align to right */
+}
+
+.settings-button:hover {
+  background-color: #f0f0f0;
+  border-radius: 4px;
+}
+
+.settings-icon {
+  width: 25px;
+  height: auto;
+  pointer-events: none; /* This is correct - prevents the image from intercepting clicks */
+  display: block;
 }
 
 .tabs-list::-webkit-scrollbar {

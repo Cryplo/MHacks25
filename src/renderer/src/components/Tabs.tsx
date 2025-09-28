@@ -1,6 +1,8 @@
 import { useState, useEffect, JSX } from 'react'
-import  Terminal  from './Terminal';
+import Terminal from './Terminal';
 import './Tabs.css';
+import settingsIcon from '../../../../resources/settings.png'
+
 
 interface Tabs {
   id: string;
@@ -15,13 +17,18 @@ interface TabsProps {
 const Tabs: React.FC<TabsProps> = ({ onActiveTabChange }) => {
   const [tabs, setTabs] = useState<Tabs[]>([]);
   const [activeTabId, setActiveTabId] = useState('');
-  const [isHidden, setIsHidden] = useState(false);
+  const [isAddTabHidden, setIsAddTabHidden] = useState(false);
+  const [isSettingsHidden, setIsSettingsHidden] = useState(true);
 
   useEffect(() => {
     if (tabs.length === 0) {
       handleNewTab();
     }
   }, []);
+
+  const handleSettingsClick = () => {
+    setIsSettingsHidden(!isSettingsHidden);
+  };
 
   const handleTabClick = (tabId: string) => {
     setActiveTabId(tabId);
@@ -37,7 +44,7 @@ const Tabs: React.FC<TabsProps> = ({ onActiveTabChange }) => {
 
     // Show the button again if we go below 10 tabs
     if (newTabs.length < 10) {
-      setIsHidden(false);
+      setIsAddTabHidden(false);
     }
 
     if (activeTabId === tabId) {
@@ -55,9 +62,11 @@ const Tabs: React.FC<TabsProps> = ({ onActiveTabChange }) => {
 
   const handleNewTab = () => {
     if (tabs.length >= 10) {
-      setIsHidden(true)
+      setIsAddTabHidden(true)
       return;
-    } 
+    }
+    setIsSettingsHidden(true)
+
     const existingIds = tabs.map((t) => parseInt(t.id, 10)).filter((id) => !isNaN(id));
     const maxId = existingIds.length > 0 ? Math.max(...existingIds) : 0;
     const newTabId = (maxId + 1).toString();
@@ -73,7 +82,8 @@ const Tabs: React.FC<TabsProps> = ({ onActiveTabChange }) => {
 
   return (
     <div>
-      <div className="tabs-container">
+      <div
+        className="tabs-container">
         <div className="tabs-list">
           {tabs.map((tab) => (
             <div
@@ -93,16 +103,27 @@ const Tabs: React.FC<TabsProps> = ({ onActiveTabChange }) => {
               </button>
             </div>
           ))}
-          <button 
-            className="new-tab-button" 
+          <button
+            className="new-tab-button"
             onClick={handleNewTab}
-            style={{ opacity: isHidden ? 0 : 1 }}
+            style={{ visibility: isAddTabHidden ? 'hidden' : 'visible' }}
           >
             +
           </button>
         </div>
       </div>
-      <div className="tab-content">
+      <button
+        className="settings-button"
+        onClick={handleSettingsClick}
+      >
+        <img
+          src={settingsIcon}
+          alt="Settings"
+          className="settings-icon"
+        />
+      </button>
+      <div className="tab-content"
+        style={{ display: isSettingsHidden ? 'block' : 'none' }}>
         {tabs.map((tab) => (
           <div
             key={tab.id}
@@ -112,6 +133,11 @@ const Tabs: React.FC<TabsProps> = ({ onActiveTabChange }) => {
             <Terminal />
           </div>
         ))}
+      </div>
+      <div className="settings-page"
+        style={{ display: isSettingsHidden ? 'none' : 'block' }}
+      >
+
       </div>
     </div>
   );
