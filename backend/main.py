@@ -18,23 +18,8 @@ async def get_optimized_command(input: str) -> str:
 
     # The prompt is crucial for getting clean, executable output
     prompt = f"""
-    You are an expert command-line assistant.
-
-    Task:
-    - I will give you a natural language instruction.
-    - Your job is to provide the **exact CLI command** that accomplishes it.
-    - **Do not** add explanations, commentary, or extra text.
-    - The command should be ready to copy-paste in a terminal.
-
-    Constraints:
-    - Assume a standard Unix/Linux environment (bash shell).
-    - Use standard commands unless otherwise specified.
-    - If multiple commands are needed, provide them separated by "&&" or as a single script command.
-
-    Instruction:
+    Translate the following description into a shell command. Output only plain text, do not have any formatting:\n
     "{input}"
-
-    Output:
     """
 
     try:

@@ -43,21 +43,26 @@ export default function Terminal({ tabId }): React.JSX.Element {
 
         // const shellCommand = await LanguageToCommand(currentCommand)
         // console.log(await CommandToDescription(shellCommand))
-        const response = await sendCommandAndWait(currentCommand)
-        const responseObject = JSON.parse(response)
-        if (responseObject.exit_code) setCurrentWorkingDirectory(responseObject.cwd)
-
+        try{
+          const response = await Promise.race([sendCommandAndWait(currentCommand), new Promise((_, reject) => setTimeout( () => reject(new Error("Query Timed Out")), 10000))]);
+          const responseObject = JSON.parse(response)
+          if (responseObject.exit_code) setCurrentWorkingDirectory(responseObject.cwd)
+          setTotalHistory((prev) => [
+            ...prev,
+            currentCommand,
+            responseObject.exit_code ? responseObject.output : 'Error'
+          ])
+        }catch{
+          setTotalHistory((prev) => [
+            ...prev,
+            currentCommand,
+            "Query Timed Out" 
+          ])
+        }
         setCommandHistory((prev) => [...prev, currentCommand])
-        setTotalHistory((prev) => [
-          ...prev,
-          currentCommand,
-          responseObject.exit_code ? responseObject.output : 'Error'
-        ])
         setCurrentCommand('')
         setHistoryIndex(-1) // Reset history index when new command is entered
-
-        // console.log('Shell command:', currentCommand)
-
+        
         setIsProcessing(false)
       }
     } else if (e.key === 'ArrowUp') {
