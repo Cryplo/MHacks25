@@ -4,29 +4,12 @@ import asyncio
 import fcntl
 import signal
 import logging
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, Request, status
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from google import genai
-from typing import Dict
-import hmac
-import hashlib
-import secrets
-import time
-from pydantic import BaseModel
-from fastapi.middleware.cors import CORSMiddleware
-
-origins = [
-        "http://localhost:5173",  # Example: your local frontend development server
-        "localhost:5173",  # Example: your local frontend development server
-        "MHack://localhost:5173",  # Example: your local frontend development server
-    "https://your-frontend-domain.com", # Example: your deployed frontend
-    # Add more origins as needed
-]
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-GEMINI_API_TIMEOUT = 15
 
 client = genai.Client(api_key="AIzaSyC9hDw9JrhmGgBVBHZOKzwAdk2VLE6H8J4")
 
@@ -35,25 +18,34 @@ async def get_optimized_command(input: str) -> str:
 
     # The prompt is crucial for getting clean, executable output
     prompt = f"""
-    You are an expert command-line assistant. A user has provided natural language query.
-    Your task is to return a single, executable shell command that achieves the user's goal.
-    Translate the user input into a shell command. Output only plain text, do not have any formatting
-    **IMPORTANT**: Return ONLY the command itself in plain text, with no explanation, formatting, back quote, or extra text.
+    You are an expert command-line assistant.
 
-    User Query: "{input}"
-    Optimized Command:
+    Task:
+    - I will give you a natural language instruction.
+    - Your job is to provide the **exact CLI command** that accomplishes it.
+    - **Do not** add explanations, commentary, or extra text.
+    - The command should be ready to copy-paste in a terminal.
+
+    Constraints:
+    - Assume a standard Unix/Linux environment (bash shell).
+    - Use standard commands unless otherwise specified.
+    - If multiple commands are needed, provide them separated by "&&" or as a single script command.
+
+    Instruction:
+    "{input}"
+
+    Output:
     """
 
     try:
         # Run the synchronous SDK call in a thread pool to avoid blocking asyncio
         loop = asyncio.get_running_loop()
-        api_call = loop.run_in_executor(
+        response = await loop.run_in_executor(
             None,
             lambda: client.models.generate_content(
                 model="gemini-2.5-flash", contents=prompt
             )
         )
-        response = await asyncio.wait_for(api_call, timeout=GEMINI_API_TIMEOUT)
         optimized_command = response.text.strip()
 
         # A simple check to ensure we got something reasonable back
@@ -66,65 +58,6 @@ async def get_optimized_command(input: str) -> str:
         return input # Fallback to original command on error
 
 app = FastAPI()
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,  # Allow cookies to be sent with cross-origin requests
-    allow_methods=["*"],     # Allow all HTTP methods (GET, POST, PUT, DELETE, etc.)
-    allow_headers=["*"],     # Allow all headers
-)
-
-
-# Shared secret (in production, this should be kept safe!)
-SHARED_SECRET = b'supersecretkey'
-
-# Temporary storage for issued challenges (in-memory, use Redis in production)
-challenge_store: Dict[str, float] = {}
-
-# Challenge expiry in seconds
-CHALLENGE_TTL = 60
-
-
-def generate_challenge() -> str:
-    return secrets.token_hex(16)
-
-
-class HMACResponse(BaseModel):
-    challenge: str
-    signature: str
-
-
-@app.get("/challenge")
-def get_challenge():
-    challenge = generate_challenge()
-    challenge_store[challenge] = time.time()
-    return {"challenge": challenge}
-
-
-@app.post("/verify")
-def verify_hmac(data: HMACResponse):
-    stored_time = challenge_store.get(data.challenge)
-    
-    if not stored_time:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or expired challenge")
-    
-    # Check if challenge expired
-    if time.time() - stored_time > CHALLENGE_TTL:
-        del challenge_store[data.challenge]
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Challenge expired")
-    
-    # Server calculates expected signature
-    expected_sig = hmac.new(SHARED_SECRET, data.challenge.encode(), hashlib.sha256).hexdigest()
-
-    # Constant-time comparison to prevent timing attacks
-    if not hmac.compare_digest(expected_sig, data.signature):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid HMAC signature")
-    
-    # Optional: remove challenge after use
-    del challenge_store[data.challenge]
-
-    return {"status": "verified"}
 
 @app.websocket("/ws/{session_id}")
 async def terminal_session(websocket: WebSocket, session_id: str):
@@ -235,7 +168,3 @@ async def terminal_session(websocket: WebSocket, session_id: str):
             logger.warning(f"Process {pid} already terminated.")
         os.close(master_fd)
         logger.info(f"Session '{session_id}': Cleanup complete for PID {pid}.")
-
-@app.get("/health", status_code=status.HTTP_200_OK)
-def health_check():
-    return {"status": "ok"}
