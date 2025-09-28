@@ -4,7 +4,7 @@ import asyncio
 import fcntl
 import signal
 import logging
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, status, HTTPException
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, Request, status
 from google import genai
 from typing import Dict
 import hmac
@@ -33,12 +33,10 @@ async def get_optimized_command(input: str) -> str:
 
     # The prompt is crucial for getting clean, executable output
     prompt = f"""
-    You are an expert command-line assistant. A user has provided the following command or natural language query.
+    You are an expert command-line assistant. A user has provided natural language query.
     Your task is to return a single, executable shell command that achieves the user's goal.
-    - If the command is already optimal, return it as-is.
-    - If it's a natural language query, translate it to the best shell command.
-    - If the input is not a command, just return it.
-    - **IMPORTANT**: Return ONLY the command itself in plain text, with no explanation, formatting, back quote, or extra text.
+    Translate the user input into a shell command. Output only plain text, do not have any formatting
+    **IMPORTANT**: Return ONLY the command itself in plain text, with no explanation, formatting, back quote, or extra text.
 
     User Query: "{input}"
     Optimized Command:
