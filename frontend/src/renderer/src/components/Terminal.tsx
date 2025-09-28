@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react'
-import { CommandToDescription, LanguageToCommand } from "../../../backend/translator"
-import { useWebSocket } from "../../../backend/websockets";
-import { useConnectionContext } from "../providers/ConnectionProvider";
+import { CommandToDescription, LanguageToCommand } from '../../../backend/translator'
+import { useWebSocket } from '../../../backend/websockets'
+import { useConnectionContext } from '../providers/ConnectionProvider'
 import './Terminal.css'
 
 export default function Terminal({ tabId }): React.JSX.Element {
@@ -9,8 +9,8 @@ export default function Terminal({ tabId }): React.JSX.Element {
   const [currentWorkingDirectory, setCurrentWorkingDirectory] = useState('')
 
   const [totalHistory, setTotalHistory] = useState([])
-  const { targetIp } = useConnectionContext();
-  const { sendCommandAndWait } = useWebSocket(targetIp, tabId);
+  const { targetIp } = useConnectionContext()
+  const { sendCommandAndWait } = useWebSocket(targetIp, tabId)
 
   const [commandHistory, setCommandHistory] = useState([])
 
@@ -24,7 +24,6 @@ export default function Terminal({ tabId }): React.JSX.Element {
 
   const processorRef = useRef(null)
 
-
   const handleKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => Promise<void> = async (e) => {
     if (e.key === 'Enter') {
       if (currentCommand.trim()) {
@@ -35,10 +34,14 @@ export default function Terminal({ tabId }): React.JSX.Element {
         // console.log(await CommandToDescription(shellCommand))
         const response = await sendCommandAndWait(currentCommand)
         const responseObject = JSON.parse(response)
-        if(!responseObject.exit_code) setCurrentWorkingDirectory(responseObject.cwd);
+        if (responseObject.exit_code) setCurrentWorkingDirectory(responseObject.cwd)
 
-        setCommandHistory(prev => [...prev, currentCommand])
-        setTotalHistory(prev => [...prev, currentCommand, responseObject.exit_code ? "Error" : responseObject.output])
+        setCommandHistory((prev) => [...prev, currentCommand])
+        setTotalHistory((prev) => [
+          ...prev,
+          currentCommand,
+          responseObject.exit_code ? responseObject.output : 'Error'
+        ])
         setCurrentCommand('')
         setHistoryIndex(-1) // Reset history index when new command is entered
 
@@ -80,7 +83,12 @@ export default function Terminal({ tabId }): React.JSX.Element {
     <div className="terminal">
       <div className="terminal-output">
         {totalHistory.map((command, index) => (
-          <div key={index} className={`terminal-command${index === historyIndex ? " selected" : ""}`}>$ {command}</div>
+          <div
+            key={index}
+            className={`terminal-command${index === 2 * historyIndex ? ' selected' : ''}`}
+          >
+            {index % 2 ? '>' : '$'} {command}
+          </div>
         ))}
       </div>
 
