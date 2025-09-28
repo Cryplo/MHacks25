@@ -5,7 +5,7 @@ const ai = new GoogleGenAI({apiKey: import.meta.env.VITE_GEMINI_API_KEY});
 
 export async function LanguageToCommand(description: string): Promise<string> {
     var os = ""
-    switch(process.platform){
+    switch(window.env.platform){
         case "darwin":
             os = " for MacOS"
             break;

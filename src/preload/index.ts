@@ -20,3 +20,7 @@ if (process.contextIsolated) {
   // @ts-ignore (define in dts)
   window.api = api
 }
+
+contextBridge.exposeInMainWorld("env", {
+  platform: process.platform, // <- this works fine here
+});
