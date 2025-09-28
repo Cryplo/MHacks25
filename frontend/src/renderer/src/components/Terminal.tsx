@@ -129,7 +129,7 @@ export default function Terminal({ tabId }): React.JSX.Element {
               fontFamily: fontFamily
             }}
           >
-            $
+            {currentWorkingDirectory === "" ? "~" : currentWorkingDirectory} $
           </span>
 
           <input
