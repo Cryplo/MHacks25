@@ -3,6 +3,7 @@ export default function Terminal(): React.JSX.Element {
     <div className="w-full max-w-4xl mx-auto">
       <div className="bg-terminal-bg border border-terminal-border rounded-lg overflow-hidden shadow-2xl">
         {/* Terminal Header */}
+        {/*
         <div className="flex items-center justify-between px-4 py-3 bg-secondary border-b border-terminal-border">
           <div className="flex items-center gap-2">
             <div className="flex gap-2">
@@ -15,7 +16,7 @@ export default function Terminal(): React.JSX.Element {
           <div className="text-xs text-muted-foreground font-mono">
             {new Date().toLocaleTimeString()}
           </div>
-        </div>
+        </div>*/}
 
         {/* Terminal Content */}
         <div className="h-96 overflow-y-auto p-4 terminal-grid font-mono text-sm">
