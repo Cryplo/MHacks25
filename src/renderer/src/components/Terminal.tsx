@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { CommandToDescription, LanguageToCommand } from "../../../backend/translator"
+import './Terminal.css'
 
 export default function Terminal(): React.JSX.Element {
   const [currentCommand, setCurrentCommand] = useState('')
@@ -21,11 +22,15 @@ export default function Terminal(): React.JSX.Element {
       if (currentCommand.trim()) {
         setIsProcessing(true)
 
-        const shellCommand = await LanguageToCommand(currentCommand)
+        // const shellCommand = await LanguageToCommand(currentCommand)
 
-        console.log(await CommandToDescription(shellCommand))
+        // console.log(await CommandToDescription(shellCommand))
 
-        console.log('Shell command:', shellCommand)
+        setCommandHistory(prev => [...prev, currentCommand])
+        setCurrentCommand('')
+        setHistoryIndex(-1) // Reset history index when new command is entered
+
+        // console.log('Shell command:', currentCommand)
 
         setIsProcessing(false)
       }
@@ -60,25 +65,31 @@ export default function Terminal(): React.JSX.Element {
   }
 
   return (
-    <div className="h-96 overflow-y-auto p-4 terminal-grid font-mono text-sm dark:bg-black dark:text-white">
-      {/* Current Input Line */}
+    <div className="terminal">
+      <div className="terminal-output">
+        {commandHistory.map((command, index) => (
+          <div key={index}>$ {command}</div>
+        ))}
+      </div>
 
-      <div className="flex items-center">
-        <span className="text-terminal-prompt mr-2">$</span>
+      <div className="terminal-input">
+        <div className="flex items-center">
+          <span className="text-terminal-prompt mr-2">$</span>
 
-        <input
-          type="text"
-          ref={inputRef}
-          value={currentCommand}
-          onChange={(e) => setCurrentCommand(e.target.value)}
-          onKeyDown={handleKeyDown}
-          disabled={isProcessing}
-          className="flex-1 bg-transparent border-none outline-none text-terminal-text font-mono"
-          placeholder="Type a wishes..."
-          autoComplete="off"
-          autoFocus
-          spellCheck={false}
-        />
+          <input
+            type="text"
+            ref={inputRef}
+            value={currentCommand}
+            onChange={(e) => setCurrentCommand(e.target.value)}
+            onKeyDown={handleKeyDown}
+            disabled={isProcessing}
+            className="flex-1 bg-transparent border-none outline-none text-terminal-text font-mono"
+            placeholder="Type a wishes..."
+            autoComplete="off"
+            autoFocus
+            spellCheck={false}
+          />
+        </div>
       </div>
     </div>
   )

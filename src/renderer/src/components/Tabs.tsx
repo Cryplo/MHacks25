@@ -15,6 +15,7 @@ interface TabsProps {
 const Tabs: React.FC<TabsProps> = ({ onActiveTabChange }) => {
   const [tabs, setTabs] = useState<Tabs[]>([]);
   const [activeTabId, setActiveTabId] = useState('');
+  const [isHidden, setIsHidden] = useState(false);
 
   useEffect(() => {
     if (tabs.length === 0) {
@@ -34,6 +35,11 @@ const Tabs: React.FC<TabsProps> = ({ onActiveTabChange }) => {
     const newTabs = tabs.filter((tab) => tab.id !== tabId);
     setTabs(newTabs);
 
+    // Show the button again if we go below 10 tabs
+    if (newTabs.length < 10) {
+      setIsHidden(false);
+    }
+
     if (activeTabId === tabId) {
       if (newTabs.length > 0) {
         const newActiveId = newTabs[0].id;
@@ -48,6 +54,10 @@ const Tabs: React.FC<TabsProps> = ({ onActiveTabChange }) => {
   };
 
   const handleNewTab = () => {
+    if (tabs.length >= 10) {
+      setIsHidden(true)
+      return;
+    } 
     const existingIds = tabs.map((t) => parseInt(t.id, 10)).filter((id) => !isNaN(id));
     const maxId = existingIds.length > 0 ? Math.max(...existingIds) : 0;
     const newTabId = (maxId + 1).toString();
@@ -83,7 +93,11 @@ const Tabs: React.FC<TabsProps> = ({ onActiveTabChange }) => {
               </button>
             </div>
           ))}
-          <button className="new-tab-button" onClick={handleNewTab}>
+          <button 
+            className="new-tab-button" 
+            onClick={handleNewTab}
+            style={{ opacity: isHidden ? 0 : 1 }}
+          >
             +
           </button>
         </div>
