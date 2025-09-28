@@ -1,26 +1,35 @@
-import { useEffect, useRef } from "react"
+import { useEffect, useRef } from "react";
 
-export function useWebSocket(){
+export function useWebSocket(ipAddress: string) {
   const socketRef = useRef<WebSocket | null>(null);
+
   useEffect(() => {
-    const ws = new WebSocket("ws://localhost:8000/ws");
+    if (!ipAddress) return;
+
+    const ws = new WebSocket(`ws://${ipAddress}:8000/ws`);
     socketRef.current = ws;
-    return () => ws.close();
-  })
+
+    return () => {
+      ws.close();
+    };
+  }, [ipAddress]);
+
   const sendCommandAndWait = (command: string): Promise<string> => {
     return new Promise((resolve, reject) => {
-      if(socketRef.current?.readyState === WebSocket.OPEN){
+      const socket = socketRef.current;
+
+      if (socket?.readyState === WebSocket.OPEN) {
         const handler = (event: MessageEvent) => {
-          socketRef.current.removeEventListener("message", handler);
+          socket.removeEventListener("message", handler);
           resolve(event.data);
-        }
-        socketRef.current.addEventListener("message", handler);
-        socketRef.current.send(command);
-      }
-      else{
-        reject("Web Socket is not open")
+        };
+        socket.addEventListener("message", handler);
+        socket.send(command);
+      } else {
+        reject("WebSocket is not open");
       }
     });
-  }
+  };
+
   return { sendCommandAndWait };
 }
