@@ -11,7 +11,7 @@ from pydantic import BaseModel
 import secrets
 import hmac
 import hashlib
-import base64
+import json
 
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -138,50 +138,34 @@ async def get_optimized_command(input: str) -> str:
 
 @app.websocket("/ws/{session_id}")
 async def terminal_session(websocket: WebSocket, session_id: str):
-    """
-    Handles a WebSocket connection by spawning a pseudo-terminal (PTY)
-    and proxying data between the client and the PTY.
-    """
     await websocket.accept()
     logger.info(f"Accepted connection for session: {session_id}")
 
-    # Fork a child process to run the shell
     pid, master_fd = pty.fork()
-    logger.info(f"Session '{session_id}': Spawned a new PTY with PID: {pid}")
 
-    if pid == 0:  # Child process
-        # This code runs in the child process.
-        # It replaces the child process with a bash shell.
-        os.execvp("env", ["env", "-i", f"HOME={os.path.expanduser('~')}", "PATH=/usr/bin:/bin", "PS1=\\w \\$ ","bash", "--noprofile", "--norc"])
+    if pid == 0:
+        os.execvp("env", [
+            "env", "-i",
+            f"HOME={os.path.expanduser('~')}",
+            "PATH=/usr/bin:/bin",
+            "PS1=\\w \\$ ",
+            "bash", "--noprofile", "--norc"
+        ])
 
-    # Parent process
-    logger.info(f"Spawned a new PTY with PID: {pid}")
-
-    # Make the master file descriptor non-blocking
-    # This is crucial for async operations
     fl = fcntl.fcntl(master_fd, fcntl.F_GETFL)
     fcntl.fcntl(master_fd, fcntl.F_SETFL, fl | os.O_NONBLOCK)
 
-    os.write(master_fd,
-        b"cd ~\n"
-    )
-
-    os.write(master_fd,
-        b"PROMPT_COMMAND='printf \"\\n__CMD_DONE__:%s\\n\" $?'\n"
-    )
+    os.write(master_fd, b"cd ~\n")
+    os.write(master_fd, b"PROMPT_COMMAND='printf \"\\n__CMD_DONE__:%s\\n\" $?'\n")
 
     loop = asyncio.get_running_loop()
 
-    # --- Task 1: Read from PTY and send to WebSocket ---
     async def pty_to_websocket():
-        """Reads output from the PTY and sends it to the client."""
         buffer = ""
         while True:
             try:
-                # Wait until the master_fd is ready to be read
-                await asyncio.sleep(0.01) # Small sleep to prevent busy-waiting
+                await asyncio.sleep(0.01)
                 data = os.read(master_fd, 1024)
-
                 if not data:
                     break
 
@@ -189,7 +173,6 @@ async def terminal_session(websocket: WebSocket, session_id: str):
                 buffer += text
 
                 if "__CMD_DONE__:" in buffer:
-                    # extract status
                     parts = buffer.split("__CMD_DONE__:")
                     before, rest = parts[0], parts[1]
                     cmd = before.split("\r\n")[0]
@@ -197,51 +180,82 @@ async def terminal_session(websocket: WebSocket, session_id: str):
                     status_line, remainder = rest.split("\n", 1)
                     exit_code = status_line.strip()
                     cwd = remainder.split(" ")[0] if " " in remainder else ""
-                    # now you know the last command finished with exit_code
-                    logger.info(f"Command finished with status {exit_code}")
                     buffer = ""
 
-                    await websocket.send_json({"cmd": cmd, "output": output, "exit_code": exit_code, "cwd": cwd})
+                    await websocket.send_json({
+                        "cmd": cmd,
+                        "output": output,
+                        "exit_code": exit_code,
+                        "cwd": cwd
+                    })
             except BlockingIOError:
-                # No data to read, continue waiting
                 continue
             except Exception as e:
                 logger.error(f"Session '{session_id}' PTY Error: {e}")
                 break
+
         await websocket.close()
 
-    # --- Task 2: Read from WebSocket and send to PTY ---
     async def websocket_to_pty():
-        """Reads input from the client and writes it to the PTY."""
         try:
             while True:
-                input = await websocket.receive_text()
-                # Optimize the command using Gemini
-                optimized_command = await get_optimized_command(input)
+                raw_input = await websocket.receive_text()
 
-                os.write(master_fd, (optimized_command + '\n').encode())
+                try:
+                    data = json.loads(raw_input)
+                    username = data.get("username")
+                    command = data.get("command")
+                    signature = data.get("signature")
+
+                    if not username or not command or not signature:
+                        await websocket.send_text("403: Invalid request format")
+                        await websocket.close()
+                        return
+
+                    key = USERS.get(username)
+                    if not key:
+                        await websocket.send_text("403: Unknown user")
+                        await websocket.close()
+                        return
+
+                    expected_hmac = hmac.new(key.encode(), command.encode(), hashlib.sha256).hexdigest()
+
+                    if not hmac.compare_digest(expected_hmac, signature):
+                        await websocket.send_text("403: Invalid signature")
+                        await websocket.close()
+                        return
+
+                    # Passed auth: run the command
+                    optimized_command = await get_optimized_command(command)
+                    os.write(master_fd, (optimized_command + '\n').encode())
+
+                except json.JSONDecodeError:
+                    await websocket.send_text("403: Invalid JSON")
+                    await websocket.close()
+                    return
+                except Exception as e:
+                    logger.error(f"WebSocket verification error: {e}")
+                    await websocket.send_text("403: Internal error")
+                    await websocket.close()
+                    return
+
         except WebSocketDisconnect:
             logger.info(f"Session '{session_id}' disconnected.")
         except Exception as e:
             logger.error(f"Session '{session_id}' WS Error: {e}")
 
-    # Run both tasks concurrently
     task1 = loop.create_task(pty_to_websocket())
     task2 = loop.create_task(websocket_to_pty())
 
     try:
-        # Wait for either task to complete
         await asyncio.gather(task1, task2)
     finally:
-        # --- Cleanup ---
-        logger.info(f"Session '{session_id}': Closing PTY and terminating process {pid}.")
+        logger.info(f"Session '{session_id}': Cleaning up")
         task1.cancel()
         task2.cancel()
-        # Kill the child process
         try:
             os.kill(pid, signal.SIGKILL)
-            os.waitpid(pid, 0) # Wait for the child to avoid zombies
+            os.waitpid(pid, 0)
         except ProcessLookupError:
             logger.warning(f"Process {pid} already terminated.")
         os.close(master_fd)
-        logger.info(f"Session '{session_id}': Cleanup complete for PID {pid}.")
