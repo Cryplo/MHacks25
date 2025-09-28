@@ -96,7 +96,7 @@ async def get_optimized_command(input: str) -> str:
 
     # The prompt is crucial for getting clean, executable output
     prompt = f"""
-    Translate the following description into a shell command. Output only plain text, do not have any formatting:\n
+    Translate the following description into a shell command. OUTPUT ONLY PLAIN TEXT, OUTPUT ONLY PLAIN TEXT, DO NOT HAVE ANY FORMATTING, DO NOT HAVE ANY FORMATTING:\n
     "{input}"
     """
 
