@@ -43,7 +43,7 @@ export function Terminal(): React.JSX.Element {
   }
 
   return (
-    <div className="h-96 overflow-y-auto p-4 terminal-grid font-mono text-sm">
+    <div className="h-96 overflow-y-auto p-4 terminal-grid font-mono text-sm dark:bg-black dark:text-white">
       {/* Current Input Line */}
       <div className="flex items-center">
         <span className="text-terminal-prompt mr-2">$</span>

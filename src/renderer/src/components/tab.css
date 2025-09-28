@@ -6,7 +6,7 @@
   box-sizing: border-box; /* Include borders in width calculation */
   border-bottom: 1px solid #282828;
   background-color: #ffffff;
-  position: fixed; /* Ensure proper positioning */
+  /*position: fixed;/*/ /* Ensure proper positioning */
   left: 0; /* Align to left edge */
 }
 
