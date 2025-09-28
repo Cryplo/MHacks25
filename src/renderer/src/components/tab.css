@@ -5,7 +5,7 @@
   padding: 0; /* Remove any default padding */
   box-sizing: border-box; /* Include borders in width calculation */
   border-bottom: 1px solid #282828;
-  background-color: #282828;
+  background-color: #ffffff;
   position: fixed; /* Ensure proper positioning */
   left: 0; /* Align to left edge */
 }
@@ -28,7 +28,7 @@
   display: flex;
   align-items: center;
   padding: 8px 12px;
-  background-color: #808080;
+  background-color: #ffffff;
   border: 1px solid #808080;
   border-bottom: none;
   cursor: pointer;
@@ -36,8 +36,8 @@
   flex-shrink: 0;
   max-width: 200px;
   position: relative;
-  margin-right: 2px;
-  border-radius: 4px 4px 0 0;
+  margin-right: 0px;
+  border-radius: 0 0 0 0;
 }
 
 .tab:hover {
@@ -45,7 +45,7 @@
 }
 
 .tab.active {
-  background-color: transparent;
+  background-color: #b0b0b0;
   border-bottom: 1px solid #fff;
   z-index: 1;
 }
